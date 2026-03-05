@@ -95,7 +95,7 @@ public class GlobalExceptionHandler {
         Map<String, Object> error = new HashMap<>();
         error.put("timestamp", LocalDateTime.now());
         error.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        error.put("message", "An unexpected error occurred. Please try again later.");
+        error.put("message", "Internal server error occurred.");
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
