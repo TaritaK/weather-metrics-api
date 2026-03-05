@@ -33,7 +33,8 @@ and provides aggregated statistics (avg, min, max, sum) over configurable date r
 ### 1. Clone the repository
 
 ```bash
-git clone <https://github.com/TaritaK/weather-metrics-api>
+git clone https://github.com/TaritaK/weather-metrics-api.git
+
 cd weather-metrics-api
 ```
 
