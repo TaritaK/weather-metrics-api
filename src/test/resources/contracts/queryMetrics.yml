@@ -1,0 +1,27 @@
+description: Query metrics with average statistic
+request:
+  method: POST
+  url: /api/metrics/query
+  headers:
+    Content-Type: application/json
+  body:
+    sensorIds: [1]
+    metricTypes: ["temperature"]
+    statistic: "avg"
+    startDate: "2026-02-21T00:00:00"
+    endDate: "2026-02-28T23:59:59"
+response:
+  status: 200
+  headers:
+    Content-Type: application/json
+  body:
+    - sensorId: 1
+      results:
+        temperature_avg: 23.5
+  matchers:
+    body:
+      - path: $[*].sensorId
+        type: by_regex
+        value: "[0-9]+"
+      - path: $[*].results.temperature_avg
+        type: by_type

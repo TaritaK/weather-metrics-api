@@ -1,0 +1,21 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### Database ###
+data/
+*.mv.db
+*.trace.db
+
+### Logs ###
+logs/
+*.log
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+

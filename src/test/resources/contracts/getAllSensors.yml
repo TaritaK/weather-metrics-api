@@ -1,0 +1,18 @@
+description: Get all sensors
+request:
+  method: GET
+  url: /api/sensors
+response:
+  status: 200
+  headers:
+    Content-Type: application/json
+  body:
+    - id: 1
+      name: "Temperature Sensor"
+  matchers:
+    body:
+      - path: $[*].id
+        type: by_regex
+        value: "[0-9]+"
+      - path: $[*].name
+        type: by_type

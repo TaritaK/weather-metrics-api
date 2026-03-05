@@ -1,0 +1,24 @@
+description: Post a new metric
+request:
+  method: POST
+  url: /api/metrics
+  headers:
+    Content-Type: application/json
+  body:
+    sensorId: 1
+    metricType: "temperature"
+    metricValue: 23.5
+    timestamp: "2026-02-28T10:00:00"
+response:
+  status: 201
+  headers:
+    Content-Type: application/json
+  bodyMatchers:
+    jsonPath:
+      - path: $.id
+        type: by_regex
+        value: "[0-9]+"
+      - path: $.metricType
+        type: by_equality
+      - path: $.metricValue
+        type: by_type

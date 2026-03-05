@@ -1,0 +1,22 @@
+description: Create a new sensor
+request:
+  method: POST
+  url: /api/sensors
+  headers:
+    Content-Type: application/json
+  body:
+    name: "Temperature Sensor"
+response:
+  status: 201
+  headers:
+    Content-Type: application/json
+  body:
+    id: 1
+    name: "Temperature Sensor"
+  matchers:
+    body:
+      - path: $.id
+        type: by_regex
+        value: "[0-9]+"
+      - path: $.name
+        type: by_equality
