@@ -22,8 +22,8 @@ public class DataInitializer {
     @Bean
     CommandLineRunner initDatabase(SensorRepository sensorRepository, MetricRepository metricRepository) {
         return args -> {
-            if (sensorRepository.count() > 0) {
-                logger.info("Database already contains data, skipping initialization");
+            if (metricRepository.count() > 4) {
+                logger.info("Database already contains sufficient data, skipping initialization");
                 return;
             }
 
@@ -48,7 +48,6 @@ public class DataInitializer {
                     createMetric(metricRepository, sensor1, "temperature", 18 + random.nextDouble() * 10, timestamp);
                     createMetric(metricRepository, sensor1, "humidity", 50 + random.nextDouble() * 30, timestamp);
 
-                    // Sensor 2 metrics
                     createMetric(metricRepository, sensor2, "temperature", 15 + random.nextDouble() * 12, timestamp);
                     createMetric(metricRepository, sensor2, "humidity", 45 + random.nextDouble() * 35, timestamp);
                 }

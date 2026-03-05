@@ -120,6 +120,211 @@ class MetricControllerIntegrationTest {
     void getAllMetrics_Success() throws Exception {
         mockMvc.perform(get("/api/metrics"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.pageable").exists())
+                .andExpect(jsonPath("$.totalElements").exists());
+    }
+
+    @Test
+    void createMetric_SensorNotFound() throws Exception {
+        MetricRequest request = new MetricRequest();
+        request.setSensorId(99999L);
+        request.setMetricType("temperature");
+        request.setMetricValue(23.5);
+
+        mockMvc.perform(post("/api/metrics")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void queryMetrics_MinStatistic() throws Exception {
+        MetricRequest metricRequest = new MetricRequest();
+        metricRequest.setSensorId(sensor.getId());
+        metricRequest.setMetricType("temperature");
+        metricRequest.setMetricValue(20.0);
+
+        mockMvc.perform(post("/api/metrics")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(metricRequest)));
+
+        QueryRequest queryRequest = new QueryRequest();
+        queryRequest.setSensorIds(List.of(sensor.getId()));
+        queryRequest.setMetricTypes(List.of("temperature"));
+        queryRequest.setStatistic("min");
+        queryRequest.setStartDate(LocalDateTime.now().minusDays(1));
+        queryRequest.setEndDate(LocalDateTime.now().plusDays(1));
+
+        mockMvc.perform(post("/api/metrics/query")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(queryRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].results.temperature_min").value(20.0));
+    }
+
+    @Test
+    void queryMetrics_MaxStatistic() throws Exception {
+        MetricRequest metricRequest = new MetricRequest();
+        metricRequest.setSensorId(sensor.getId());
+        metricRequest.setMetricType("temperature");
+        metricRequest.setMetricValue(30.0);
+
+        mockMvc.perform(post("/api/metrics")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(metricRequest)));
+
+        QueryRequest queryRequest = new QueryRequest();
+        queryRequest.setSensorIds(List.of(sensor.getId()));
+        queryRequest.setMetricTypes(List.of("temperature"));
+        queryRequest.setStatistic("max");
+        queryRequest.setStartDate(LocalDateTime.now().minusDays(1));
+        queryRequest.setEndDate(LocalDateTime.now().plusDays(1));
+
+        mockMvc.perform(post("/api/metrics/query")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(queryRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].results.temperature_max").value(30.0));
+    }
+
+    @Test
+    void queryMetrics_SumStatistic() throws Exception {
+        MetricRequest metricRequest = new MetricRequest();
+        metricRequest.setSensorId(sensor.getId());
+        metricRequest.setMetricType("temperature");
+        metricRequest.setMetricValue(15.0);
+
+        mockMvc.perform(post("/api/metrics")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(metricRequest)));
+
+        QueryRequest queryRequest = new QueryRequest();
+        queryRequest.setSensorIds(List.of(sensor.getId()));
+        queryRequest.setMetricTypes(List.of("temperature"));
+        queryRequest.setStatistic("sum");
+        queryRequest.setStartDate(LocalDateTime.now().minusDays(1));
+        queryRequest.setEndDate(LocalDateTime.now().plusDays(1));
+
+        mockMvc.perform(post("/api/metrics/query")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(queryRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].results.temperature_sum").value(15.0));
+    }
+
+    @Test
+    void queryMetrics_InvalidStatistic() throws Exception {
+        QueryRequest queryRequest = new QueryRequest();
+        queryRequest.setSensorIds(List.of(sensor.getId()));
+        queryRequest.setMetricTypes(List.of("temperature"));
+        queryRequest.setStatistic("invalid");
+        queryRequest.setStartDate(LocalDateTime.now().minusDays(1));
+        queryRequest.setEndDate(LocalDateTime.now());
+
+        mockMvc.perform(post("/api/metrics/query")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(queryRequest)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void queryMetrics_DateRangeTooShort() throws Exception {
+        QueryRequest queryRequest = new QueryRequest();
+        queryRequest.setSensorIds(List.of(sensor.getId()));
+        queryRequest.setMetricTypes(List.of("temperature"));
+        queryRequest.setStatistic("avg");
+        queryRequest.setStartDate(LocalDateTime.now().minusHours(12));
+        queryRequest.setEndDate(LocalDateTime.now());
+
+        mockMvc.perform(post("/api/metrics/query")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(queryRequest)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void queryMetrics_MultipleSensors() throws Exception {
+        Sensor sensor2 = new Sensor();
+        sensor2.setName("Test Sensor 2");
+        sensor2 = sensorRepository.save(sensor2);
+
+        MetricRequest metricRequest1 = new MetricRequest();
+        metricRequest1.setSensorId(sensor.getId());
+        metricRequest1.setMetricType("temperature");
+        metricRequest1.setMetricValue(20.0);
+
+        mockMvc.perform(post("/api/metrics")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(metricRequest1)));
+
+        MetricRequest metricRequest2 = new MetricRequest();
+        metricRequest2.setSensorId(sensor2.getId());
+        metricRequest2.setMetricType("temperature");
+        metricRequest2.setMetricValue(25.0);
+
+        mockMvc.perform(post("/api/metrics")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(metricRequest2)));
+
+        QueryRequest queryRequest = new QueryRequest();
+        queryRequest.setSensorIds(List.of(sensor.getId(), sensor2.getId()));
+        queryRequest.setMetricTypes(List.of("temperature"));
+        queryRequest.setStatistic("avg");
+        queryRequest.setStartDate(LocalDateTime.now().minusDays(1));
+        queryRequest.setEndDate(LocalDateTime.now().plusDays(1));
+
+        mockMvc.perform(post("/api/metrics/query")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(queryRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].sensorId").exists())
+                .andExpect(jsonPath("$[1].sensorId").exists());
+    }
+
+    @Test
+    void queryMetrics_MultipleMetricTypes() throws Exception {
+        MetricRequest tempRequest = new MetricRequest();
+        tempRequest.setSensorId(sensor.getId());
+        tempRequest.setMetricType("temperature");
+        tempRequest.setMetricValue(22.0);
+
+        mockMvc.perform(post("/api/metrics")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(tempRequest)));
+
+        MetricRequest humidityRequest = new MetricRequest();
+        humidityRequest.setSensorId(sensor.getId());
+        humidityRequest.setMetricType("humidity");
+        humidityRequest.setMetricValue(65.0);
+
+        mockMvc.perform(post("/api/metrics")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(humidityRequest)));
+
+        QueryRequest queryRequest = new QueryRequest();
+        queryRequest.setSensorIds(List.of(sensor.getId()));
+        queryRequest.setMetricTypes(List.of("temperature", "humidity"));
+        queryRequest.setStatistic("avg");
+        queryRequest.setStartDate(LocalDateTime.now().minusDays(1));
+        queryRequest.setEndDate(LocalDateTime.now().plusDays(1));
+
+        mockMvc.perform(post("/api/metrics/query")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(queryRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].results.temperature_avg").value(22.0))
+                .andExpect(jsonPath("$[0].results.humidity_avg").value(65.0));
+    }
+
+    @Test
+    void getAllMetrics_WithPagination() throws Exception {
+        mockMvc.perform(get("/api/metrics")
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.number").value(0));
     }
 }

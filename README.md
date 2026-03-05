@@ -11,7 +11,8 @@ and provides aggregated statistics (avg, min, max, sum) over configurable date r
 - Date range validation (1 day to 1 month)
 - Input validation
 - Exception handling
-- H2 in-memory database with file persistence in dec, MySQL in prod
+- H2 database with file persistence in dev, MySQL in prod
+- HTTP Basic Authentication with role-based access control in prod
 - Unit and integration tests
 - Swagger API documentation 
 
@@ -34,47 +35,48 @@ and provides aggregated statistics (avg, min, max, sum) over configurable date r
 
 ```bash
 git clone https://github.com/TaritaK/weather-metrics-api.git
-
 cd weather-metrics-api
 ```
 
-### 2. Build the project
+### 2. Run the application
 
+**Option A: Using Maven (Requires cloning the repository)**
+
+Build the project
 ```bash
 ./mvnw clean install
 ```
-
-### 3. Run the application
-
+Run the application
 ```bash
 ./mvnw spring-boot:run
 ```
 
+**Option B: Using Docker**
+```bash
+docker pull tarita29/weather-metrics-api:0505
+docker run -d -p 8080:8080 --name weather-api tarita29/weather-metrics-api:0505
+```
+
 The application will start on `http://localhost:8080`
 
-**Note**: On first startup with an empty database, sample data will be automatically created:
+**Note**: On first startup with insufficient data, sample data will be automatically created:
 - 2 sensors 
 - 7 days of historical metrics (temperature and humidity readings every 6 hours)
 - Weather data from OpenWeather API is fetched every 12 hours (temperature, humidity, pressure, wind-speed)
-  (During test, it can be changes to every 2 mins in class - WeatherDataScheduler, line 55, 56)
 
-### 4. API Documentation (Swagger UI)
-
-Once the application is running, API documentation can be accessed here:
-
-- **Swagger UI**: `http://localhost:8080/swagger-ui.html`
-
-The Swagger UI provides an interactive interface to explore and test all API endpoints.
-
-### 5. H2 Console
+### H2 Console
 
 - URL: `http://localhost:8080/h2-console`
 - JDBC URL: `jdbc:h2:file:./data/sensors`
 - Username: `sa`
 - Password: (empty)
 
-## API Endpoints
+### 3. API Endpoints
 
+Full API documentation available at:
+- **Swagger UI**: `http://localhost:8080/swagger-ui.html`
+
+### Examples
 ### 1. Create a Sensor
 **POST** `/api/sensors`
 ```bash
@@ -83,29 +85,8 @@ curl -X POST http://localhost:8080/api/sensors \
   -d '{"name": "Temperature Sensor"}'
 ```
 
-**Response example:**
-```json
-{
-  "id": 1,
-  "name": "Temperature Sensor 1"
-}
-```
-
-### 2. Get All Sensors
-
-**GET** `/api/sensors`
-
-```bash
-curl http://localhost:8080/api/sensors
-```
-
-Browser: http://localhost:8080/api/sensors
-
-
-### 3. Store a Metric
-
+### 2. Store a Metric
 **POST** `/api/metrics`
-
 ```bash
 curl -X POST http://localhost:8080/api/metrics \
   -H "Content-Type: application/json" \
@@ -115,7 +96,6 @@ curl -X POST http://localhost:8080/api/metrics \
     "metricValue": 20.5
   }'
 ```
-
 **Response:**
 ```json
 {
@@ -129,43 +109,20 @@ curl -X POST http://localhost:8080/api/metrics \
   "timestamp": "2026-03-05T02:05:44.170686"
 }
 ```
-
-### 4. Get All Metrics
+### 3. Get All Metrics (paginated)
 
 **GET** `/api/metrics`
 
+**Note**: Default page size: 50. Use `?page=0&size=10` to customize.
+
 ```bash
 curl http://localhost:8080/api/metrics
+curl "http://localhost:8080/api/metrics?size=10"
+curl "http://localhost:8080/api/metrics?page=0&size=10"
 ```
-
-### 5. Query Metrics with Aggregations - avg, min, max, sum
-
-**POST** `/api/metrics/query`
-
-```bash
-curl -X POST http://localhost:8080/api/metrics/query \
-  -H "Content-Type: application/json" \
-  -d '{
-    "sensorIds": [128],
-    "metricTypes": ["temperature"],
-    "statistic": "avg"
-  }'
-```
-
-**Response:**
-```json
-[
-  {
-    "sensorId": 128,
-    "results": {
-      "temperature_avg": 23.5
-    }
-  }
-]
-```
-
 ## Query Examples
 ### Example 1: Average temperature and humidity for a single sensor in the last week
+**POST** `/api/metrics/query`
 
 ```bash
 curl -X POST http://localhost:8080/api/metrics/query \
@@ -177,19 +134,6 @@ curl -X POST http://localhost:8080/api/metrics/query \
     "startDate": "2026-02-21T00:00:00",
     "endDate": "2026-02-28T23:59:59"
   }'
-```
-
-**Response:**
-```json
-[
-  {
-    "sensorId": 120,
-    "results": {
-      "humidity_avg": 65.2,
-      "temperature_avg": 22.3
-    }
-  }
-]
 ```
 
 ### Example 2: Average temperature and humidity for multiple sensors in the last week
@@ -229,17 +173,6 @@ curl -X POST http://localhost:8080/api/metrics/query \
   }'
 ```
 
-**Response:**
-```json
-[
-  {
-    "sensorId": 128,
-    "results": {
-      "temperature_avg": 21.8
-    }
-  }
-]
-```
 
 ## Validation Rules
 

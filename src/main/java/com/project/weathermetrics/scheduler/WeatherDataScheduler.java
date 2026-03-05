@@ -26,17 +26,21 @@ public class WeatherDataScheduler {
     
     @Value("${weather.api.city:Dublin}")
     private String city;
+
+    @Value("${weather.api.url:https://api.openweathermap.org/data/2.5}")
+    private String apiUrl;
     
     private final WebClient webClient;
     private final MetricService metricService;
     private final SensorRepository sensorRepository;
     private Sensor weatherSensor;
 
-    public WeatherDataScheduler(MetricService metricService, SensorRepository sensorRepository) {
+    public WeatherDataScheduler(MetricService metricService, SensorRepository sensorRepository, @Value("${weather.api.url:https://api.openweathermap.org/data/2.5}") String apiUrl) {
         this.metricService = metricService;
         this.sensorRepository = sensorRepository;
+        this.apiUrl = apiUrl;
         this.webClient = WebClient.builder()
-                .baseUrl("https://api.openweathermap.org/data/2.5")
+                .baseUrl(apiUrl)
                 .build();
         initializeSensor();
     }
@@ -77,6 +81,10 @@ public class WeatherDataScheduler {
         } catch (Exception e) {
             logger.error("Error fetching weather data: {}", e.getMessage());
         }
+    }
+
+    public void fetchWeatherDataForTest() {
+        fetchWeatherData();
     }
 
     private void saveWeatherMetrics(Map<String, Object> response) {

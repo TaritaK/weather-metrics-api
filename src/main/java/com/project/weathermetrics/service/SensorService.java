@@ -5,6 +5,8 @@ import com.project.weathermetrics.exception.SensorNotFoundException;
 import com.project.weathermetrics.repository.SensorRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,9 +28,9 @@ public class SensorService {
         return saved;
     }
 
-    public List<Sensor> getAllSensors() {
-        logger.info("Fetching all sensors");
-        return sensorRepository.findAll();
+    public Page<Sensor> getAllSensors(int page, int size) {
+        logger.info("Fetching sensors - page: {}, size: {}", page, size);
+        return sensorRepository.findAll(PageRequest.of(page, size));
     }
 
     public Sensor getSensorById(Long id) {

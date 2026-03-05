@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,10 +35,12 @@ public class SensorController {
         return ResponseEntity.status(HttpStatus.CREATED).body(sensorService.createSensor(sensor));
     }
 
-    @Operation(summary = "Get all sensors", description = "Get a list of all sensors in the system")
+    @Operation(summary = "Get all sensors", description = "Get a paginated list of all sensors in the system")
     @GetMapping
-    public ResponseEntity<List<Sensor>> getAllSensors() {
-        return ResponseEntity.ok(sensorService.getAllSensors());
+    public ResponseEntity<Page<Sensor>> getAllSensors(
+            @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "50") int size) {
+        return ResponseEntity.ok(sensorService.getAllSensors(page, size));
     }
 
     @Operation(summary = "Get sensor by ID", description = "Get a specific sensor by its ID")

@@ -7,12 +7,37 @@ response:
   headers:
     Content-Type: application/json
   body:
-    - id: 1
-      name: "Temperature Sensor"
+    content:
+      - id: 1
+        name: "Temperature Sensor"
+    pageable:
+      pageNumber: 0
+      pageSize: 10
+      offset: 0
+      paged: true
+      unpaged: false
+      sort:
+        empty: true
+        sorted: false
+        unsorted: true
+    totalElements: 1
+    totalPages: 1
+    last: true
+    first: true
+    size: 10
+    number: 0
+    numberOfElements: 1
+    empty: false
+    sort:
+      empty: true
+      sorted: false
+      unsorted: true
   matchers:
     body:
-      - path: $[*].id
+      - path: $.content[*].id
         type: by_regex
         value: "[0-9]+"
-      - path: $[*].name
+      - path: $.content[*].name
+        type: by_type
+      - path: $.totalElements
         type: by_type

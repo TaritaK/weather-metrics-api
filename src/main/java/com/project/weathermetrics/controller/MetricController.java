@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,10 +41,12 @@ public class MetricController {
         return ResponseEntity.ok(metric);
     }
 
-    @Operation(summary = "Get all metrics", description = "Get all metrics from all sensors")
+    @Operation(summary = "Get all metrics", description = "Get paginated metrics from all sensors")
     @GetMapping
-    public ResponseEntity<List<Metric>> getAllMetrics() {
-        List<Metric> metrics = metricService.getAllMetrics();
+    public ResponseEntity<Page<Metric>> getAllMetrics(
+            @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "50") int size) {
+        Page<Metric> metrics = metricService.getAllMetrics(page, size);
         return ResponseEntity.ok(metrics);
     }
 

@@ -12,6 +12,8 @@ import com.project.weathermetrics.repository.MetricRepository;
 import com.project.weathermetrics.repository.SensorRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -45,12 +47,12 @@ public class MetricService {
                 });
     }
 
-    public List<Metric> getAllMetrics() {
+    public Page<Metric> getAllMetrics(int page, int size) {
         long startTime = System.currentTimeMillis();
-        logger.info("Fetching all metrics");
-        List<Metric> metrics = metricRepository.findAll();
+        logger.info("Fetching metrics - page: {}, size: {}", page, size);
+        Page<Metric> metrics = metricRepository.findAll(PageRequest.of(page, size));
         long duration = System.currentTimeMillis() - startTime;
-        logger.info("Retrieved {} metrics in {}ms", metrics.size(), duration);
+        logger.info("Retrieved {} metrics in {}ms", metrics.getTotalElements(), duration);
         return metrics;
     }
 
